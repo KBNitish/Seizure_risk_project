@@ -1,6 +1,9 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.models.sensor_data import SensorData
 from app.database.supabase import supabase
+
 
 app = FastAPI(
     title="Smart Health Monitoring API",
@@ -9,6 +12,28 @@ app = FastAPI(
 )
 
 
+# ============================================================
+# CORS CONFIGURATION
+# Allows the React frontend running on localhost:5173
+# to communicate with this FastAPI backend.
+# ============================================================
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# ============================================================
+# ROOT
+# ============================================================
+
 @app.get("/")
 def root():
     return {
@@ -16,12 +41,21 @@ def root():
     }
 
 
+# ============================================================
+# HEALTH CHECK
+# ============================================================
+
 @app.get("/health")
 def health_check():
     return {
         "status": "healthy"
     }
 
+
+# ============================================================
+# RECEIVE SENSOR DATA
+# ESP32 / testing client -> FastAPI -> Supabase
+# ============================================================
 
 @app.post("/sensor-data")
 def receive_sensor_data(data: SensorData):
@@ -42,7 +76,12 @@ def receive_sensor_data(data: SensorData):
         "finger_detected": data.finger_detected
     }
 
-    result = supabase.table("health_readings").insert(sensor_data).execute()
+    result = (
+        supabase
+        .table("health_readings")
+        .insert(sensor_data)
+        .execute()
+    )
 
     return {
         "message": "Sensor data stored successfully",
@@ -50,6 +89,11 @@ def receive_sensor_data(data: SensorData):
         "database": result.data
     }
 
+
+# ============================================================
+# GET LATEST SENSOR DATA
+# Supabase -> FastAPI -> React frontend
+# ============================================================
 
 @app.get("/sensor-data/latest")
 def latest_sensor_data():
