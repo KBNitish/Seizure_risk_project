@@ -10,13 +10,24 @@ function App() {
 
   const fetchSensorData = async () => {
     try {
-      const response = await fetch(API_URL);
+      // Cache-busting timestamp ensures we always request
+      // the newest sensor record from FastAPI.
+      const response = await fetch(`${API_URL}?t=${Date.now()}`, {
+        cache: "no-store",
+      });
 
       if (!response.ok) {
         throw new Error("API request failed");
       }
 
       const result = await response.json();
+
+      console.log("FRONTEND DATA:", result.data);
+      console.log("FINGER:", result.data?.finger_detected);
+      console.log(
+        "FINGER TYPE:",
+        typeof result.data?.finger_detected
+      );
 
       if (result.data) {
         setData(result.data);
@@ -30,216 +41,461 @@ function App() {
   };
 
   useEffect(() => {
-    fetchSensorData();
+  let stopped = false;
+  let timer;
 
-    const interval = setInterval(fetchSensorData, 1000);
+  const poll = async () => {
+    if (stopped) return;
 
-    return () => clearInterval(interval);
-  }, []);
+    await fetchSensorData();
+
+    if (!stopped) {
+      timer = setTimeout(poll, 100);
+    }
+  };
+
+  poll();
+
+  return () => {
+    stopped = true;
+    clearTimeout(timer);
+  };
+}, []);
 
   const value = (number, decimals = 1) => {
     if (number === null || number === undefined) {
       return "--";
     }
 
-    return Number(number).toFixed(decimals);
+    const numericValue = Number(number);
+
+    if (Number.isNaN(numericValue)) {
+      return "--";
+    }
+
+    return numericValue.toFixed(decimals);
   };
 
-  const heartRate = data?.heart_rate ?? 0;
+  // Only true when backend sends actual boolean true
+  const fingerDetected =
+    data?.finger_detected === true;
+
+  const heartRate = data?.heart_rate;
   const spo2 = data?.spo2;
   const temperature = data?.temperature;
   const humidity = data?.humidity;
 
   return (
     <div className="app">
+
       <header className="header">
+
         <div>
-          <div className="eyebrow">SMART HEALTH</div>
-          <h1>Health Monitoring System</h1>
-          <p>Real-time sensor monitoring</p>
+
+          <div className="eyebrow">
+            SMART HEALTH
+          </div>
+
+          <h1>
+            Health Monitoring System
+          </h1>
+
+          <p>
+            Real-time sensor monitoring
+          </p>
+
         </div>
 
-        <div className={`connection ${connected ? "online" : "offline"}`}>
+        <div
+          className={`connection ${
+            connected ? "online" : "offline"
+          }`}
+        >
+
           <span className="status-dot"></span>
-          {connected ? "ESP32 Connected" : "Disconnected"}
+
+          {connected
+            ? "ESP32 Connected"
+            : "Disconnected"}
+
         </div>
+
       </header>
 
       <main>
+
+        {/* =====================================================
+            VITALS
+        ===================================================== */}
+
         <section className="vitals-grid">
+
           <div className="card heart-card">
+
             <div className="card-top">
-              <span className="icon">♥</span>
-              <span className="label">HEART RATE</span>
+
+              <span className="icon">
+                ♥
+              </span>
+
+              <span className="label">
+                HEART RATE
+              </span>
+
             </div>
 
             <div className="main-value">
+
               {value(heartRate)}
-              <span>BPM</span>
+
+              <span>
+                BPM
+              </span>
+
             </div>
 
             <p className="description">
-              {heartRate > 0 ? "Heart rate detected" : "Place finger on MAX30102"}
+
+              {fingerDetected
+                ? "Heart rate detected"
+                : "Place finger on MAX30102"}
+
             </p>
+
           </div>
 
+
           <div className="card">
+
             <div className="card-top">
-              <span className="icon">◉</span>
-              <span className="label">SpO₂</span>
+
+              <span className="icon">
+                ◉
+              </span>
+
+              <span className="label">
+                SpO₂
+              </span>
+
             </div>
 
             <div className="main-value">
-              {spo2 === null || spo2 === undefined ? "--" : value(spo2)}
-              <span>%</span>
+
+              {value(spo2)}
+
+              <span>
+                %
+              </span>
+
             </div>
 
             <p className="description">
               Blood oxygen level
             </p>
+
           </div>
 
+
           <div className="card">
+
             <div className="card-top">
-              <span className="icon">♨</span>
-              <span className="label">TEMPERATURE</span>
+
+              <span className="icon">
+                ♨
+              </span>
+
+              <span className="label">
+                TEMPERATURE
+              </span>
+
             </div>
 
             <div className="main-value">
+
               {value(temperature)}
-              <span>°C</span>
+
+              <span>
+                °C
+              </span>
+
             </div>
 
             <p className="description">
               Body/environment temperature
             </p>
+
           </div>
 
+
           <div className="card">
+
             <div className="card-top">
-              <span className="icon">💧</span>
-              <span className="label">HUMIDITY</span>
+
+              <span className="icon">
+                💧
+              </span>
+
+              <span className="label">
+                HUMIDITY
+              </span>
+
             </div>
 
             <div className="main-value">
+
               {value(humidity)}
-              <span>%</span>
+
+              <span>
+                %
+              </span>
+
             </div>
 
             <p className="description">
               Current humidity
             </p>
+
           </div>
+
         </section>
 
+
+        {/* =====================================================
+            MOTION SENSORS
+        ===================================================== */}
+
         <section className="sensor-section">
+
           <div className="section-heading">
+
             <div>
-              <div className="eyebrow">MOTION SENSORS</div>
-              <h2>Movement & Orientation</h2>
+
+              <div className="eyebrow">
+                MOTION SENSORS
+              </div>
+
+              <h2>
+                Movement & Orientation
+              </h2>
+
             </div>
 
             <div className="live-badge">
+
               <span></span>
               LIVE
+
             </div>
+
           </div>
 
+
           <div className="motion-grid">
+
             <div className="sensor-card">
-              <h3>Accelerometer</h3>
+
+              <h3>
+                Accelerometer
+              </h3>
+
               <p className="sensor-description">
                 Linear acceleration
               </p>
 
               <div className="axis-grid">
+
                 <div>
                   <span>X</span>
-                  <strong>{value(data?.accel_x, 3)}</strong>
-                  <small>g</small>
+
+                  <strong>
+                    {value(data?.accel_x, 3)}
+                  </strong>
+
+                  <small>
+                    g
+                  </small>
                 </div>
+
 
                 <div>
                   <span>Y</span>
-                  <strong>{value(data?.accel_y, 3)}</strong>
-                  <small>g</small>
+
+                  <strong>
+                    {value(data?.accel_y, 3)}
+                  </strong>
+
+                  <small>
+                    g
+                  </small>
                 </div>
+
 
                 <div>
                   <span>Z</span>
-                  <strong>{value(data?.accel_z, 3)}</strong>
-                  <small>g</small>
+
+                  <strong>
+                    {value(data?.accel_z, 3)}
+                  </strong>
+
+                  <small>
+                    g
+                  </small>
                 </div>
+
               </div>
+
             </div>
 
+
             <div className="sensor-card">
-              <h3>Gyroscope</h3>
+
+              <h3>
+                Gyroscope
+              </h3>
+
               <p className="sensor-description">
                 Rotational movement
               </p>
 
               <div className="axis-grid">
+
                 <div>
                   <span>X</span>
-                  <strong>{value(data?.gyro_x, 3)}</strong>
-                  <small>rad/s</small>
+
+                  <strong>
+                    {value(data?.gyro_x, 3)}
+                  </strong>
+
+                  <small>
+                    rad/s
+                  </small>
                 </div>
+
 
                 <div>
                   <span>Y</span>
-                  <strong>{value(data?.gyro_y, 3)}</strong>
-                  <small>rad/s</small>
+
+                  <strong>
+                    {value(data?.gyro_y, 3)}
+                  </strong>
+
+                  <small>
+                    rad/s
+                  </small>
                 </div>
+
 
                 <div>
                   <span>Z</span>
-                  <strong>{value(data?.gyro_z, 3)}</strong>
-                  <small>rad/s</small>
+
+                  <strong>
+                    {value(data?.gyro_z, 3)}
+                  </strong>
+
+                  <small>
+                    rad/s
+                  </small>
                 </div>
+
               </div>
+
             </div>
+
           </div>
+
         </section>
+
+
+        {/* =====================================================
+            MAX30102
+        ===================================================== */}
 
         <section className="raw-section">
+
           <div className="section-heading">
+
             <div>
-              <div className="eyebrow">MAX30102</div>
-              <h2>Pulse Sensor Data</h2>
+
+              <div className="eyebrow">
+                MAX30102
+              </div>
+
+              <h2>
+                Pulse Sensor Data
+              </h2>
+
             </div>
+
           </div>
+
 
           <div className="raw-grid">
-            <div className="raw-card">
-              <span>IR VALUE</span>
-              <strong>{data?.ir_value ?? "--"}</strong>
-            </div>
 
             <div className="raw-card">
-              <span>RED VALUE</span>
-              <strong>{data?.red_value ?? "--"}</strong>
-            </div>
 
-            <div className="raw-card">
-              <span>FINGER</span>
+              <span>
+                IR VALUE
+              </span>
+
               <strong>
-                {data?.finger_detected ? "DETECTED" : "NOT DETECTED"}
+                {data?.ir_value ?? "--"}
               </strong>
+
             </div>
+
+
+            <div className="raw-card">
+
+              <span>
+                RED VALUE
+              </span>
+
+              <strong>
+                {data?.red_value ?? "--"}
+              </strong>
+
+            </div>
+
+
+            <div className="raw-card">
+
+              <span>
+                FINGER
+              </span>
+
+              <strong>
+
+                {fingerDetected
+                  ? "DETECTED"
+                  : "NOT DETECTED"}
+
+              </strong>
+
+            </div>
+
           </div>
+
         </section>
+
       </main>
 
+
       <footer>
-        <span>Smart Health Monitoring System</span>
 
         <span>
+          Smart Health Monitoring System
+        </span>
+
+        <span>
+
           {lastUpdated
             ? `Last updated ${lastUpdated.toLocaleTimeString()}`
             : "Waiting for sensor data..."}
+
         </span>
+
       </footer>
+
     </div>
   );
 }
