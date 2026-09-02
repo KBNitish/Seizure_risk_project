@@ -6,7 +6,7 @@ import threading
 from queue import Queue, Empty
 
 
-SERIAL_PORT = "COM17"
+SERIAL_PORT = "/dev/cu.usbserial-0001"
 BAUD_RATE = 115200
 
 API_URL = "http://127.0.0.1:8000/sensor-data"

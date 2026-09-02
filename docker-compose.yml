@@ -1,0 +1,122 @@
+# ─────────────────────────────────────────────────────────────
+# Broker: Kafka (KRaft mode, no Zookeeper needed).
+# Monitoring UI: Redpanda Console — talks to the Kafka broker
+# over the Kafka protocol and to Kafka Connect's REST API.
+# ─────────────────────────────────────────────────────────────
+
+services:
+
+  # ---------- Kafka (KRaft mode — no Zookeeper needed) ----------
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    hostname: kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"       # external listener (host access)
+      - "29092:29092"     # internal listener (container-to-container)
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:29092"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  # ---------- Kafka Connect + Debezium ----------
+  connect:
+    image: debezium/connect:2.6
+    container_name: connect
+    depends_on:
+      kafka:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
+    ports:
+      - "8083:8083"   # Kafka Connect REST API (register connectors here)
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092   # change to redpanda:29092 if using Redpanda
+      GROUP_ID: eeg-connect-cluster
+      CONFIG_STORAGE_TOPIC: eeg_connect_configs
+      OFFSET_STORAGE_TOPIC: eeg_connect_offsets
+      STATUS_STORAGE_TOPIC: eeg_connect_statuses
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+
+  # ---------- TimescaleDB (Postgres + time-series extension) ----------
+  timescaledb:
+    image: timescale/timescaledb-ha:pg18
+    container_name: timescaledb
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: eeg_user
+      POSTGRES_PASSWORD: eeg_pass
+      POSTGRES_DB: eeg_db
+      # Required for Debezium logical replication (pgoutput plugin)
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_replication_slots=10"
+      - "-c"
+      - "max_wal_senders=10"
+    volumes:
+      - timescale-data:/var/lib/postgresql/data1
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eeg_user -d eeg_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ---------- Redpanda Console — UI for browsing Kafka topics/messages/connectors ----------
+  # This talks to the plain Kafka broker above via the Kafka protocol; it does not
+  # require running the Redpanda broker itself.
+  redpanda-console:
+    image: redpandadata/console:v2.7.2
+    container_name: redpanda-console
+    depends_on:
+      - kafka
+      - connect
+    ports:
+      - "8080:8080"
+    environment:
+      CONFIG_FILEPATH: /etc/redpanda/console-config.yaml
+    configs:
+      - source: redpanda_console_config
+        target: /etc/redpanda/console-config.yaml
+
+volumes:
+  kafka-data:
+  timescale-data:
+   external: true
+   name: dev_sourcecode_timescale-data
+
+configs:
+  redpanda_console_config:
+    content: |
+      kafka:
+        brokers:
+          - kafka:29092
+        schemaRegistry:
+          enabled: false
+
+      connect:
+        enabled: true
+        clusters:
+          - name: connect
+            url: http://connect:8083

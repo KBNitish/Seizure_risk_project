@@ -1,0 +1,35 @@
+{
+  "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+
+  "database.hostname": "timescaledb",
+  "database.port": "5432",
+  "database.user": "eeg_user",
+  "database.password": "eeg_pass",
+  "database.dbname": "eeg_db",
+  "database.sslmode": "disable",
+
+  "plugin.name": "pgoutput",
+  "topic.prefix": "postgres",
+
+  "table.include.list": "_timescaledb_internal\\._hyper_2_.*",
+
+  "transforms": "route",
+  "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+  "transforms.route.regex": "^postgres\\._timescaledb_internal\\._hyper_2_.*$",
+  "transforms.route.replacement": "postgres.public.health_readings",
+
+  "tasks.max": "1",
+
+  "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "key.converter.schemas.enable": "true",
+
+  "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "value.converter.schemas.enable": "true",
+  "value.converter.json.schemas.enable": "true",
+
+  "header.converter": "org.apache.kafka.connect.storage.SimpleHeaderConverter",
+
+  "topic.creation.enable": "true",
+  "topic.creation.default.partitions": "1",
+  "topic.creation.default.replication.factor": "-1"
+}
