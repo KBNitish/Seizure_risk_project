@@ -210,148 +210,193 @@ def convert_created_at_to_epoch_ms(created_at):
 
 
 # ============================================================
-# PROCESS MESSAGES
+# START MESSAGE
 # ============================================================
 
 print()
-print("Consumer 2 started.")
+print("==============================================")
+print("        SEIZURE MODEL CONSUMER 2")
+print("==============================================")
 print("Input :", INPUT_TOPIC)
 print("Output:", OUTPUT_TOPIC)
 print("Group :", CONSUMER_GROUP)
+print("Status: Waiting for Kafka messages...")
+print("Press Ctrl+C to stop.")
+print("==============================================")
 print()
 
 counter = 0
 
 
-for message in consumer:
+# ============================================================
+# PROCESS MESSAGES
+# ============================================================
+
+try:
+
+    for message in consumer:
+
+        try:
+
+            data = message.value
+
+            # ------------------------------------------------
+            # Build feature vector
+            # ------------------------------------------------
+
+            feature_values = []
+
+            for feature in FEATURE_COLS:
+
+                value = data.get(feature, 0.0)
+
+                if value is None:
+                    value = 0.0
+
+                feature_values.append(float(value))
+
+            X = np.array(
+                [feature_values],
+                dtype=float
+            )
+
+            # ------------------------------------------------
+            # Prediction
+            # ------------------------------------------------
+
+            prediction = int(
+                model.predict(X)[0]
+            )
+
+            # ------------------------------------------------
+            # Probability of seizure class
+            # ------------------------------------------------
+
+            if hasattr(model, "predict_proba"):
+
+                probabilities = model.predict_proba(X)[0]
+
+                classes = list(model.classes_)
+
+                if 1 in classes:
+
+                    seizure_probability = float(
+                        probabilities[classes.index(1)]
+                    )
+
+                else:
+
+                    seizure_probability = 0.0
+
+            else:
+
+                seizure_probability = float(prediction)
+
+            # ------------------------------------------------
+            # Risk mapping
+            # ------------------------------------------------
+
+            if prediction == 1:
+
+                risk_level = "HIGH"
+                prediction_text = "Seizure"
+
+            else:
+
+                risk_level = "LOW"
+                prediction_text = "No Seizure"
+
+            # ------------------------------------------------
+            # IDs / timestamp
+            # ------------------------------------------------
+
+            health_reading_id = int(
+                data["health_reading_id"]
+            )
+
+            created_at = data.get("created_at")
+
+            created_at_epoch_ms = convert_created_at_to_epoch_ms(
+                created_at
+            )
+
+            # ------------------------------------------------
+            # Kafka Connect payload
+            # ------------------------------------------------
+
+            payload = {
+                "health_reading_id": health_reading_id,
+                "created_at": created_at_epoch_ms,
+                "risk_score": seizure_probability,
+                "risk_level": risk_level,
+                "prediction": prediction_text,
+                "model_version": "gradient_boosting_v1"
+            }
+
+            # ------------------------------------------------
+            # Final schema + payload message
+            # ------------------------------------------------
+
+            output_message = {
+                "schema": OUTPUT_SCHEMA,
+                "payload": payload
+            }
+
+            # ------------------------------------------------
+            # Send to Kafka
+            # ------------------------------------------------
+
+            producer.send(
+                OUTPUT_TOPIC,
+                value=output_message
+            )
+
+            producer.flush()
+
+            counter += 1
+
+            print(
+                f"[{counter}] "
+                f"ID={health_reading_id} | "
+                f"Risk Score={seizure_probability:.4f} | "
+                f"Risk={risk_level} | "
+                f"Prediction={prediction_text}"
+            )
+
+        except Exception as e:
+
+            print(
+                f"[ERROR] Processing message: {repr(e)}"
+            )
+
+
+# ============================================================
+# CLEAN SHUTDOWN
+# ============================================================
+
+except KeyboardInterrupt:
+
+    print()
+    print("[INFO] Ctrl+C received.")
+    print("[INFO] Stopping Consumer 2...")
+
+
+finally:
+
+    print("[INFO] Closing Kafka producer...")
 
     try:
-
-        data = message.value
-
-        # ----------------------------------------------------
-        # Build feature vector
-        # ----------------------------------------------------
-
-        feature_values = []
-
-        for feature in FEATURE_COLS:
-
-            value = data.get(feature, 0.0)
-
-            if value is None:
-                value = 0.0
-
-            feature_values.append(float(value))
-
-        X = np.array(
-            [feature_values],
-            dtype=float
-        )
-
-        # ----------------------------------------------------
-        # Prediction
-        # ----------------------------------------------------
-
-        prediction = int(
-            model.predict(X)[0]
-        )
-
-        # ----------------------------------------------------
-        # Probability of seizure class
-        # ----------------------------------------------------
-
-        if hasattr(model, "predict_proba"):
-
-            probabilities = model.predict_proba(X)[0]
-
-            classes = list(model.classes_)
-
-            if 1 in classes:
-                seizure_probability = float(
-                    probabilities[classes.index(1)]
-                )
-            else:
-                seizure_probability = 0.0
-
-        else:
-
-            seizure_probability = float(prediction)
-
-        # ----------------------------------------------------
-        # Risk mapping
-        # ----------------------------------------------------
-
-        if prediction == 1:
-
-            risk_level = "HIGH"
-            prediction_text = "Seizure"
-
-        else:
-
-            risk_level = "LOW"
-            prediction_text = "No Seizure"
-
-        # ----------------------------------------------------
-        # IDs / timestamp
-        # ----------------------------------------------------
-
-        health_reading_id = int(
-            data["health_reading_id"]
-        )
-
-        created_at = data.get("created_at")
-
-        created_at_epoch_ms = convert_created_at_to_epoch_ms(
-            created_at
-        )
-
-        # ----------------------------------------------------
-        # Kafka Connect payload
-        # ----------------------------------------------------
-
-        payload = {
-            "health_reading_id": health_reading_id,
-            "created_at": created_at_epoch_ms,
-            "risk_score": seizure_probability,
-            "risk_level": risk_level,
-            "prediction": prediction_text,
-            "model_version": "gradient_boosting_v1"
-        }
-
-        # ----------------------------------------------------
-        # Final schema + payload message
-        # ----------------------------------------------------
-
-        output_message = {
-            "schema": OUTPUT_SCHEMA,
-            "payload": payload
-        }
-
-        # ----------------------------------------------------
-        # Send to Kafka
-        # ----------------------------------------------------
-
-        producer.send(
-            OUTPUT_TOPIC,
-            value=output_message
-        )
-
         producer.flush()
+        producer.close()
+    except Exception:
+        pass
 
-        counter += 1
+    print("[INFO] Closing Kafka consumer...")
 
-        print(
-            f"[{counter}] "
-            f"ID={health_reading_id} | "
-            f"Risk Score={seizure_probability:.4f} | "
-            f"Risk={risk_level} | "
-            f"Prediction={prediction_text}"
-        )
+    try:
+        consumer.close()
+    except Exception:
+        pass
 
-    except Exception as e:
-
-        print(
-            "ERROR processing message:",
-            repr(e)
-        )
+    print("[INFO] Consumer 2 stopped cleanly.")
+    print(f"[INFO] Total predictions processed: {counter}")
