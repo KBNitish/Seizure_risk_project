@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import MyHealth from "./pages/MyHealth";
+import RiskAlerts from "./pages/RiskAlerts";
 
 const API_URL = "http://127.0.0.1:8000/sensor-data/latest";
 
@@ -76,11 +77,7 @@ function App() {
   const temperature = data?.temperature;
 
   const getSpo2Status = () => {
-    if (
-      !fingerDetected ||
-      spo2 === null ||
-      spo2 === undefined
-    ) {
+    if (!fingerDetected || spo2 === null || spo2 === undefined) {
       return "Waiting for reading";
     }
 
@@ -94,10 +91,7 @@ function App() {
   };
 
   const getTemperatureStatus = () => {
-    if (
-      temperature === null ||
-      temperature === undefined
-    ) {
+    if (temperature === null || temperature === undefined) {
       return "Waiting for reading";
     }
 
@@ -157,7 +151,6 @@ function App() {
 
           </div>
 
-
           <nav className="sidebar-nav">
 
             <p className="nav-heading">
@@ -183,7 +176,6 @@ function App() {
                 </span>
               </button>
             ))}
-
 
             <p className="nav-heading nav-heading-secondary">
               ACCOUNT
@@ -212,7 +204,6 @@ function App() {
           </nav>
 
         </div>
-
 
         {/* ===================================================
             SIDEBAR DEVICE STATUS
@@ -289,7 +280,6 @@ function App() {
 
           </div>
 
-
           <div className="header-actions">
 
             <button
@@ -298,7 +288,6 @@ function App() {
             >
               <span>🔔</span>
             </button>
-
 
             <button className="profile-button">
 
@@ -353,7 +342,6 @@ function App() {
 
                 </div>
 
-
                 <div
                   className={`device-status ${
                     connected
@@ -401,7 +389,6 @@ function App() {
                   {connected ? "✓" : "!"}
                 </div>
 
-
                 <div className="health-banner-content">
 
                   <p>
@@ -417,7 +404,6 @@ function App() {
                   </span>
 
                 </div>
-
 
                 <div className="last-checked">
 
@@ -456,7 +442,6 @@ function App() {
 
                   </div>
 
-
                   <div className="live-indicator">
 
                     <span></span>
@@ -469,7 +454,6 @@ function App() {
 
 
                 <div className="vitals-grid">
-
 
                   {/* HEART RATE */}
 
@@ -491,7 +475,6 @@ function App() {
 
                     </div>
 
-
                     <div className="vital-value">
 
                       {value(heartRate, 0)}
@@ -501,7 +484,6 @@ function App() {
                       </span>
 
                     </div>
-
 
                     <div
                       className={`vital-status finger-status ${
@@ -542,7 +524,6 @@ function App() {
 
                     </div>
 
-
                     <div className="vital-value">
 
                       {value(spo2, 0)}
@@ -552,7 +533,6 @@ function App() {
                       </span>
 
                     </div>
-
 
                     <div
                       className={`vital-status ${
@@ -591,7 +571,6 @@ function App() {
 
                     </div>
 
-
                     <div className="vital-value">
 
                       {value(temperature, 1)}
@@ -601,7 +580,6 @@ function App() {
                       </span>
 
                     </div>
-
 
                     <div className="vital-status status-normal">
 
@@ -634,11 +612,9 @@ function App() {
 
                     </div>
 
-
                     <div className="risk-value">
                       LOW
                     </div>
-
 
                     <div className="vital-status status-normal">
 
@@ -661,7 +637,6 @@ function App() {
 
               <section className="dashboard-grid">
 
-
                 {/* HEART RATE TREND */}
 
                 <article className="panel trend-panel">
@@ -680,7 +655,6 @@ function App() {
 
                     </div>
 
-
                     <div className="trend-current">
 
                       <strong>
@@ -695,7 +669,6 @@ function App() {
 
                   </div>
 
-
                   <div className="chart-placeholder">
 
                     <div className="chart-grid-lines">
@@ -707,7 +680,6 @@ function App() {
                       <span></span>
 
                     </div>
-
 
                     <svg
                       className="trend-svg"
@@ -734,7 +706,6 @@ function App() {
                       />
 
                     </svg>
-
 
                     <div className="chart-labels">
 
@@ -775,13 +746,11 @@ function App() {
 
                     </div>
 
-
                     <span className="normal-pill">
                       LOW RISK
                     </span>
 
                   </div>
-
 
                   <div className="risk-content">
 
@@ -800,7 +769,6 @@ function App() {
                       </div>
 
                     </div>
-
 
                     <div className="risk-message">
 
@@ -858,13 +826,11 @@ function App() {
 
                 </div>
 
-
                 <div className="activity-card">
 
                   <div className="activity-icon">
                     ✓
                   </div>
-
 
                   <div className="activity-content">
 
@@ -878,7 +844,6 @@ function App() {
                     </p>
 
                   </div>
-
 
                   <span className="activity-time">
                     Just now
@@ -917,9 +882,7 @@ function App() {
 
                 </div>
 
-
                 <div className="monitoring-divider"></div>
-
 
                 <div className="monitoring-item">
 
@@ -943,9 +906,7 @@ function App() {
 
                 </div>
 
-
                 <div className="monitoring-divider"></div>
-
 
                 <div className="monitoring-item">
 
@@ -981,6 +942,14 @@ function App() {
 
             <MyHealth />
 
+          ) : activePage === "Risk & Alerts" ? (
+
+            /* =================================================
+               RISK & ALERTS
+            ================================================= */
+
+            <RiskAlerts />
+
           ) : (
 
             /* =================================================
@@ -1000,22 +969,18 @@ function App() {
 
               </div>
 
-
               <p className="page-label">
                 PATIENT PORTAL
               </p>
-
 
               <h1>
                 {activePage}
               </h1>
 
-
               <p>
                 This section will have its own dedicated
                 page and features.
               </p>
-
 
               <button
                 className="back-dashboard-button"
