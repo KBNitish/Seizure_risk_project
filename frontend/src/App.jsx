@@ -74,29 +74,6 @@ function App() {
   const spo2 = data?.spo2;
   const temperature = data?.temperature;
 
-  /*
-   * Simple patient-facing interpretations.
-   * These are not medical diagnoses.
-   */
-
-  const getHeartStatus = () => {
-    if (
-      !fingerDetected ||
-      heartRate === null ||
-      heartRate === undefined
-    ) {
-      return "Waiting for reading";
-    }
-
-    const hr = Number(heartRate);
-
-    if (hr < 50 || hr > 120) {
-      return "Outside usual range";
-    }
-
-    return "Within usual range";
-  };
-
   const getSpo2Status = () => {
     if (
       !fingerDetected ||
@@ -544,17 +521,22 @@ function App() {
 
                     </div>
 
+
+                    {/* FINGER DETECTION */}
+
                     <div
-                      className={`vital-status ${
-                        getHeartStatus().includes("Outside")
-                          ? "status-warning"
-                          : "status-normal"
+                      className={`vital-status finger-status ${
+                        fingerDetected
+                          ? "finger-detected"
+                          : "finger-waiting"
                       }`}
                     >
 
                       <span></span>
 
-                      {getHeartStatus()}
+                      {fingerDetected
+                        ? "Finger detected"
+                        : "Place finger on sensor"}
 
                     </div>
 
