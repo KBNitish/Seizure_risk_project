@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./App.css";
+import MyHealth from "./pages/MyHealth";
 
 const API_URL = "http://127.0.0.1:8000/sensor-data/latest";
 
@@ -118,34 +119,13 @@ function App() {
     : "We are waiting to reconnect to the monitoring device.";
 
   const navigationItems = [
-    {
-      name: "Dashboard",
-      icon: "⌂",
-    },
-    {
-      name: "My Health",
-      icon: "▣",
-    },
-    {
-      name: "Risk & Alerts",
-      icon: "✦",
-    },
-    {
-      name: "History",
-      icon: "◷",
-    },
-    {
-      name: "Reports",
-      icon: "▤",
-    },
-    {
-      name: "Profile",
-      icon: "●",
-    },
-    {
-      name: "Settings",
-      icon: "⚙",
-    },
+    { name: "Dashboard", icon: "⌂" },
+    { name: "My Health", icon: "▣" },
+    { name: "Risk & Alerts", icon: "✦" },
+    { name: "History", icon: "◷" },
+    { name: "Reports", icon: "▤" },
+    { name: "Profile", icon: "●" },
+    { name: "Settings", icon: "⚙" },
   ];
 
   return (
@@ -185,7 +165,6 @@ function App() {
             </p>
 
             {navigationItems.slice(0, 5).map((item) => (
-
               <button
                 key={item.name}
                 className={`nav-item ${
@@ -195,7 +174,6 @@ function App() {
                 }`}
                 onClick={() => setActivePage(item.name)}
               >
-
                 <span className="nav-icon">
                   {item.icon}
                 </span>
@@ -203,9 +181,7 @@ function App() {
                 <span>
                   {item.name}
                 </span>
-
               </button>
-
             ))}
 
 
@@ -214,7 +190,6 @@ function App() {
             </p>
 
             {navigationItems.slice(5).map((item) => (
-
               <button
                 key={item.name}
                 className={`nav-item ${
@@ -224,7 +199,6 @@ function App() {
                 }`}
                 onClick={() => setActivePage(item.name)}
               >
-
                 <span className="nav-icon">
                   {item.icon}
                 </span>
@@ -232,9 +206,7 @@ function App() {
                 <span>
                   {item.name}
                 </span>
-
               </button>
-
             ))}
 
           </nav>
@@ -242,7 +214,9 @@ function App() {
         </div>
 
 
-        {/* DEVICE STATUS */}
+        {/* ===================================================
+            SIDEBAR DEVICE STATUS
+        =================================================== */}
 
         <div className="sidebar-device">
 
@@ -284,13 +258,13 @@ function App() {
 
 
       {/* =====================================================
-          MAIN APPLICATION AREA
+          MAIN AREA
       ===================================================== */}
 
       <div className="main-area">
 
         {/* ===================================================
-            TOP HEADER
+            TOPBAR
         =================================================== */}
 
         <header className="topbar">
@@ -302,6 +276,7 @@ function App() {
             </div>
 
             <div>
+
               <div className="brand-name">
                 VitalCare
               </div>
@@ -309,6 +284,7 @@ function App() {
               <div className="brand-subtitle">
                 Smart Health Monitoring
               </div>
+
             </div>
 
           </div>
@@ -346,17 +322,18 @@ function App() {
 
 
         {/* ===================================================
-            PAGE CONTENT
+            MAIN CONTENT
         =================================================== */}
 
         <main>
 
+          {/* =================================================
+              DASHBOARD
+          ================================================= */}
+
           {activePage === "Dashboard" ? (
 
             <>
-              {/* =================================================
-                  WELCOME
-              ================================================= */}
 
               <section className="welcome-section">
 
@@ -408,9 +385,9 @@ function App() {
               </section>
 
 
-              {/* =================================================
-                  OVERALL HEALTH STATUS
-              ================================================= */}
+              {/* =============================================
+                  HEALTH STATUS
+              ============================================= */}
 
               <section
                 className={`health-banner ${
@@ -423,6 +400,7 @@ function App() {
                 <div className="health-status-icon">
                   {connected ? "✓" : "!"}
                 </div>
+
 
                 <div className="health-banner-content">
 
@@ -458,9 +436,9 @@ function App() {
               </section>
 
 
-              {/* =================================================
-                  VITALS
-              ================================================= */}
+              {/* =============================================
+                  CURRENT VITALS
+              ============================================= */}
 
               <section className="section">
 
@@ -478,6 +456,7 @@ function App() {
 
                   </div>
 
+
                   <div className="live-indicator">
 
                     <span></span>
@@ -490,6 +469,7 @@ function App() {
 
 
                 <div className="vitals-grid">
+
 
                   {/* HEART RATE */}
 
@@ -511,6 +491,7 @@ function App() {
 
                     </div>
 
+
                     <div className="vital-value">
 
                       {value(heartRate, 0)}
@@ -521,8 +502,6 @@ function App() {
 
                     </div>
 
-
-                    {/* FINGER DETECTION */}
 
                     <div
                       className={`vital-status finger-status ${
@@ -543,7 +522,7 @@ function App() {
                   </article>
 
 
-                  {/* SPO2 */}
+                  {/* OXYGEN */}
 
                   <article className="vital-card">
 
@@ -563,6 +542,7 @@ function App() {
 
                     </div>
 
+
                     <div className="vital-value">
 
                       {value(spo2, 0)}
@@ -572,6 +552,7 @@ function App() {
                       </span>
 
                     </div>
+
 
                     <div
                       className={`vital-status ${
@@ -610,6 +591,7 @@ function App() {
 
                     </div>
 
+
                     <div className="vital-value">
 
                       {value(temperature, 1)}
@@ -619,6 +601,7 @@ function App() {
                       </span>
 
                     </div>
+
 
                     <div className="vital-status status-normal">
 
@@ -651,9 +634,11 @@ function App() {
 
                     </div>
 
+
                     <div className="risk-value">
                       LOW
                     </div>
+
 
                     <div className="vital-status status-normal">
 
@@ -670,11 +655,12 @@ function App() {
               </section>
 
 
-              {/* =================================================
+              {/* =============================================
                   LOWER DASHBOARD
-              ================================================= */}
+              ============================================= */}
 
               <section className="dashboard-grid">
+
 
                 {/* HEART RATE TREND */}
 
@@ -693,6 +679,7 @@ function App() {
                       </h2>
 
                     </div>
+
 
                     <div className="trend-current">
 
@@ -788,6 +775,7 @@ function App() {
 
                     </div>
 
+
                     <span className="normal-pill">
                       LOW RISK
                     </span>
@@ -825,9 +813,18 @@ function App() {
                         analysing your sensor data.
                       </p>
 
-                      <button className="text-button">
+                      <button
+                        className="text-button"
+                        onClick={() =>
+                          setActivePage("Risk & Alerts")
+                        }
+                      >
                         View risk details
-                        <span>→</span>
+
+                        <span>
+                          →
+                        </span>
+
                       </button>
 
                     </div>
@@ -839,9 +836,9 @@ function App() {
               </section>
 
 
-              {/* =================================================
+              {/* =============================================
                   RECENT ACTIVITY
-              ================================================= */}
+              ============================================= */}
 
               <section className="section recent-section">
 
@@ -868,6 +865,7 @@ function App() {
                     ✓
                   </div>
 
+
                   <div className="activity-content">
 
                     <strong>
@@ -881,6 +879,7 @@ function App() {
 
                   </div>
 
+
                   <span className="activity-time">
                     Just now
                   </span>
@@ -890,9 +889,9 @@ function App() {
               </section>
 
 
-              {/* =================================================
+              {/* =============================================
                   MONITORING STRIP
-              ================================================= */}
+              ============================================= */}
 
               <section className="monitoring-strip">
 
@@ -974,36 +973,55 @@ function App() {
 
             </>
 
+          ) : activePage === "My Health" ? (
+
+            /* =================================================
+               MY HEALTH
+            ================================================= */
+
+            <MyHealth />
+
           ) : (
 
-            /* ===================================================
-               TEMPORARY PAGE PLACEHOLDER
-            =================================================== */
+            /* =================================================
+               OTHER PLACEHOLDER PAGES
+            ================================================= */
 
             <section className="placeholder-page">
 
               <div className="placeholder-icon">
-                {navigationItems.find(
-                  (item) => item.name === activePage
-                )?.icon}
+
+                {
+                  navigationItems.find(
+                    (item) =>
+                      item.name === activePage
+                  )?.icon
+                }
+
               </div>
+
 
               <p className="page-label">
                 PATIENT PORTAL
               </p>
 
+
               <h1>
                 {activePage}
               </h1>
+
 
               <p>
                 This section will have its own dedicated
                 page and features.
               </p>
 
+
               <button
                 className="back-dashboard-button"
-                onClick={() => setActivePage("Dashboard")}
+                onClick={() =>
+                  setActivePage("Dashboard")
+                }
               >
                 ← Back to Dashboard
               </button>
