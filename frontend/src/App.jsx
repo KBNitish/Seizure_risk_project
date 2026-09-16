@@ -3,6 +3,7 @@ import "./App.css";
 
 import MyHealth from "./pages/MyHealth";
 import RiskAlerts from "./pages/RiskAlerts";
+import SeizureRisk from "./pages/SeizureRisk";
 
 const API_URL = "http://127.0.0.1:8000/sensor-data/latest";
 
@@ -19,6 +20,10 @@ const navigationItems = [
     name: "Risk & Alerts",
     icon: "✦",
   },
+  {
+  name: "Seizure Risk",
+  icon: "⌬",
+},
   {
     name: "History",
     icon: "◷",
@@ -45,7 +50,6 @@ function App() {
   const [connected, setConnected] = useState(false);
 
   const [lastUpdated, setLastUpdated] = useState(null);
-
 
   // ============================================================
   // FETCH LIVE SENSOR DATA
@@ -77,7 +81,6 @@ function App() {
     }
   };
 
-
   // ============================================================
   // LIVE POLLING
   // ============================================================
@@ -104,7 +107,6 @@ function App() {
     };
   }, []);
 
-
   // ============================================================
   // FORMAT VALUES
   // ============================================================
@@ -126,7 +128,6 @@ function App() {
     return numericValue.toFixed(decimals);
   };
 
-
   // ============================================================
   // CURRENT SENSOR VALUES
   // ============================================================
@@ -142,7 +143,6 @@ function App() {
 
   const temperature =
     data?.temperature;
-
 
   // ============================================================
   // HEART RATE STATUS
@@ -173,7 +173,6 @@ function App() {
     return "Within usual range";
   };
 
-
   // ============================================================
   // SPO2 STATUS
   // ============================================================
@@ -201,15 +200,8 @@ function App() {
     return "Normal";
   };
 
-
   // ============================================================
   // ROOM TEMPERATURE STATUS
-  //
-  // IMPORTANT:
-  // The current DHT11 sensor is being treated as an ambient /
-  // room temperature sensor.
-  //
-  // We therefore DO NOT compare it against 35–38 °C.
   // ============================================================
 
   const getTemperatureStatus = () => {
@@ -223,7 +215,6 @@ function App() {
     return "Room temperature";
   };
 
-
   // ============================================================
   // OVERALL STATUS
   // ============================================================
@@ -233,12 +224,10 @@ function App() {
       ? "Monitoring is active"
       : "Connection needs attention";
 
-
   const overallDescription =
     connected
       ? "Your health data is being monitored continuously."
       : "We are waiting to reconnect to the monitoring device.";
-
 
   // ============================================================
   // NAVIGATION
@@ -247,7 +236,6 @@ function App() {
   const handleNavigation = (page) => {
     setActivePage(page);
   };
-
 
   // ============================================================
   // COMING SOON PAGE
@@ -264,6 +252,7 @@ function App() {
         <div className="page-header">
 
           <div>
+
             <p className="page-label">
               VITALCARE
             </p>
@@ -275,10 +264,10 @@ function App() {
             <p className="welcome-text">
               {description}
             </p>
+
           </div>
 
         </div>
-
 
         <div className="panel">
 
@@ -329,7 +318,6 @@ function App() {
     );
   };
 
-
   // ============================================================
   // DASHBOARD
   // ============================================================
@@ -359,7 +347,6 @@ function App() {
             </p>
 
           </div>
-
 
           <div
             className={`device-status ${
@@ -391,7 +378,6 @@ function App() {
 
         </section>
 
-
         {/* ======================================================
             OVERALL HEALTH STATUS
         ====================================================== */}
@@ -407,7 +393,6 @@ function App() {
           <div className="health-status-icon">
             {connected ? "✓" : "!"}
           </div>
-
 
           <div className="health-banner-content">
 
@@ -425,7 +410,6 @@ function App() {
 
           </div>
 
-
           <div className="last-checked">
 
             <span>
@@ -441,7 +425,6 @@ function App() {
           </div>
 
         </section>
-
 
         {/* ======================================================
             VITALS
@@ -463,7 +446,6 @@ function App() {
 
             </div>
 
-
             <div className="live-indicator">
 
               <span></span>
@@ -474,9 +456,7 @@ function App() {
 
           </div>
 
-
           <div className="vitals-grid">
-
 
             {/* ==================================================
                 HEART RATE
@@ -487,7 +467,6 @@ function App() {
               <div className="vital-icon heart">
                 ♥
               </div>
-
 
               <div className="vital-heading">
 
@@ -501,7 +480,6 @@ function App() {
 
               </div>
 
-
               <div className="vital-value">
 
                 {value(
@@ -514,7 +492,6 @@ function App() {
                 </span>
 
               </div>
-
 
               <div
                 className={`vital-status ${
@@ -534,7 +511,6 @@ function App() {
 
             </article>
 
-
             {/* ==================================================
                 SPO2
             ================================================== */}
@@ -544,7 +520,6 @@ function App() {
               <div className="vital-icon oxygen">
                 O₂
               </div>
-
 
               <div className="vital-heading">
 
@@ -558,7 +533,6 @@ function App() {
 
               </div>
 
-
               <div className="vital-value">
 
                 {value(
@@ -571,7 +545,6 @@ function App() {
                 </span>
 
               </div>
-
 
               <div
                 className={`vital-status ${
@@ -591,7 +564,6 @@ function App() {
 
             </article>
 
-
             {/* ==================================================
                 ROOM TEMPERATURE
             ================================================== */}
@@ -601,7 +573,6 @@ function App() {
               <div className="vital-icon temperature">
                 °
               </div>
-
 
               <div className="vital-heading">
 
@@ -614,7 +585,6 @@ function App() {
                 </small>
 
               </div>
-
 
               <div className="vital-value">
 
@@ -629,7 +599,6 @@ function App() {
 
               </div>
 
-
               <div className="vital-status status-normal">
 
                 <span></span>
@@ -640,7 +609,6 @@ function App() {
 
             </article>
 
-
             {/* ==================================================
                 SEIZURE RISK
             ================================================== */}
@@ -650,7 +618,6 @@ function App() {
               <div className="vital-icon risk">
                 ✦
               </div>
-
 
               <div className="vital-heading">
 
@@ -664,11 +631,9 @@ function App() {
 
               </div>
 
-
               <div className="risk-value">
                 LOW
               </div>
-
 
               <div className="vital-status status-normal">
 
@@ -684,13 +649,11 @@ function App() {
 
         </section>
 
-
         {/* ======================================================
             LOWER DASHBOARD
         ====================================================== */}
 
         <section className="dashboard-grid">
-
 
           {/* ====================================================
               HEART RATE TREND
@@ -712,7 +675,6 @@ function App() {
 
               </div>
 
-
               <div className="trend-current">
 
                 <strong>
@@ -730,7 +692,6 @@ function App() {
 
             </div>
 
-
             <div className="chart-placeholder">
 
               <div className="chart-grid-lines">
@@ -741,7 +702,6 @@ function App() {
                 <span></span>
 
               </div>
-
 
               <svg
                 className="trend-svg"
@@ -769,7 +729,6 @@ function App() {
 
               </svg>
 
-
               <div className="chart-labels">
 
                 <span>
@@ -789,7 +748,6 @@ function App() {
             </div>
 
           </article>
-
 
           {/* ====================================================
               SEIZURE RISK
@@ -811,13 +769,11 @@ function App() {
 
               </div>
 
-
               <span className="normal-pill">
                 LOW RISK
               </span>
 
             </div>
-
 
             <div className="risk-content">
 
@@ -837,7 +793,6 @@ function App() {
 
               </div>
 
-
               <div className="risk-message">
 
                 <h3>
@@ -850,12 +805,11 @@ function App() {
                   sensor data.
                 </p>
 
-
                 <button
                   className="text-button"
                   onClick={() =>
                     setActivePage(
-                      "Risk & Alerts"
+                      "Seizure Risk"
                     )
                   }
                 >
@@ -875,7 +829,6 @@ function App() {
           </article>
 
         </section>
-
 
         {/* ======================================================
             RECENT ACTIVITY
@@ -899,13 +852,11 @@ function App() {
 
           </div>
 
-
           <div className="activity-card">
 
             <div className="activity-icon">
               ✓
             </div>
-
 
             <div className="activity-content">
 
@@ -921,7 +872,6 @@ function App() {
 
             </div>
 
-
             <span className="activity-time">
               Just now
             </span>
@@ -930,13 +880,11 @@ function App() {
 
         </section>
 
-
         {/* ======================================================
             MONITORING FOOTER STATUS
         ====================================================== */}
 
         <section className="monitoring-strip">
-
 
           <div className="monitoring-item">
 
@@ -960,9 +908,7 @@ function App() {
 
           </div>
 
-
           <div className="monitoring-divider"></div>
-
 
           <div className="monitoring-item">
 
@@ -986,9 +932,7 @@ function App() {
 
           </div>
 
-
           <div className="monitoring-divider"></div>
-
 
           <div className="monitoring-item">
 
@@ -1018,7 +962,6 @@ function App() {
     );
   };
 
-
   // ============================================================
   // MAIN CONTENT
   // ============================================================
@@ -1034,7 +977,6 @@ function App() {
       );
     }
 
-
     if (
       activePage === "My Health"
     ) {
@@ -1043,7 +985,6 @@ function App() {
         <MyHealth />
       );
     }
-
 
     if (
       activePage === "Risk & Alerts"
@@ -1054,6 +995,14 @@ function App() {
       );
     }
 
+    if (
+      activePage === "Seizure Risk"
+    ) {
+
+      return (
+        <SeizureRisk />
+      );
+    }
 
     if (
       activePage === "History"
@@ -1068,7 +1017,6 @@ function App() {
       );
     }
 
-
     if (
       activePage === "Reports"
     ) {
@@ -1081,7 +1029,6 @@ function App() {
         />
       );
     }
-
 
     if (
       activePage === "Profile"
@@ -1096,7 +1043,6 @@ function App() {
       );
     }
 
-
     if (
       activePage === "Settings"
     ) {
@@ -1110,12 +1056,10 @@ function App() {
       );
     }
 
-
     return (
       <Dashboard />
     );
   };
-
 
   // ============================================================
   // APPLICATION
@@ -1125,13 +1069,11 @@ function App() {
 
     <div className="app">
 
-
       {/* ======================================================
           SIDEBAR
       ====================================================== */}
 
       <aside className="sidebar">
-
 
         {/* ====================================================
             BRAND
@@ -1142,7 +1084,6 @@ function App() {
           <div className="brand-mark">
             ♥
           </div>
-
 
           <div>
 
@@ -1158,7 +1099,6 @@ function App() {
 
         </div>
 
-
         {/* ====================================================
             MAIN MENU
         ==================================================== */}
@@ -1169,11 +1109,10 @@ function App() {
             MAIN MENU
           </p>
 
-
           <nav className="sidebar-nav">
 
             {navigationItems
-              .slice(0, 5)
+              .slice(0, 6)
               .map((item) => (
 
                 <button
@@ -1205,7 +1144,6 @@ function App() {
           </nav>
 
         </div>
-
 
         {/* ====================================================
             ACCOUNT
@@ -1217,11 +1155,10 @@ function App() {
             ACCOUNT
           </p>
 
-
           <nav className="sidebar-nav">
 
             {navigationItems
-              .slice(5)
+              .slice(6)
               .map((item) => (
 
                 <button
@@ -1254,7 +1191,6 @@ function App() {
 
         </div>
 
-
         {/* ====================================================
             DEVICE STATUS
         ==================================================== */}
@@ -1265,7 +1201,6 @@ function App() {
             MONITORING DEVICE
           </p>
 
-
           <div className="sidebar-device-status">
 
             <span
@@ -1275,7 +1210,6 @@ function App() {
                   : "offline"
               }`}
             ></span>
-
 
             <div>
 
@@ -1299,13 +1233,11 @@ function App() {
 
       </aside>
 
-
       {/* ======================================================
           MAIN AREA
       ====================================================== */}
 
       <div className="main-area">
-
 
         {/* ====================================================
             TOPBAR
@@ -1313,12 +1245,9 @@ function App() {
 
         <header className="topbar">
 
-
           <div className="topbar-spacer"></div>
 
-
           <div className="header-actions">
-
 
             <button
               className="icon-button"
@@ -1336,7 +1265,6 @@ function App() {
 
             </button>
 
-
             <button
               className="profile-button"
               onClick={() =>
@@ -1350,11 +1278,9 @@ function App() {
                 P
               </span>
 
-
               <span className="profile-name">
                 Profile
               </span>
-
 
               <span className="chevron">
                 ˅
@@ -1366,7 +1292,6 @@ function App() {
 
         </header>
 
-
         {/* ====================================================
             PAGE CONTENT
         ==================================================== */}
@@ -1376,7 +1301,6 @@ function App() {
           {renderPage()}
 
         </main>
-
 
         {/* ====================================================
             FOOTER
