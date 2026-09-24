@@ -183,6 +183,94 @@ def get_latest_sensor_data():
 
 
 # ============================================================
+# HEALTH HISTORY
+# ============================================================
+
+@app.get("/health-history")
+def get_health_history(limit: int = 50):
+
+    connection = None
+    cursor = None
+
+    try:
+
+        # Keep the requested limit within a safe range
+        limit = max(1, min(limit, 200))
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        query = """
+        SELECT
+            created_at,
+            heart_rate,
+            spo2,
+            temperature,
+            humidity,
+            finger_detected
+        FROM health_readings
+        ORDER BY created_at DESC
+        LIMIT %s;
+        """
+
+        cursor.execute(query, (limit,))
+
+        rows = cursor.fetchall()
+
+        readings = []
+
+        for row in rows:
+
+            readings.append({
+                "created_at": row[0],
+                "heart_rate": (
+                    float(row[1])
+                    if row[1] is not None
+                    else None
+                ),
+                "spo2": (
+                    float(row[2])
+                    if row[2] is not None
+                    else None
+                ),
+                "temperature": (
+                    float(row[3])
+                    if row[3] is not None
+                    else None
+                ),
+                "humidity": (
+                    float(row[4])
+                    if row[4] is not None
+                    else None
+                ),
+                "finger_detected": row[5]
+            })
+
+        return {
+            "message": "Health history",
+            "data": readings
+        }
+
+    except Exception as e:
+
+        print("-> HEALTH HISTORY ERROR:", e)
+
+        return {
+            "message": "Unable to retrieve health history",
+            "data": [],
+            "error": str(e)
+        }
+
+    finally:
+
+        if cursor is not None:
+            cursor.close()
+
+        if connection is not None:
+            connection.close()
+
+
+# ============================================================
 # SEIZURE RISK - LATEST
 # ============================================================
 
@@ -268,7 +356,7 @@ def get_seizure_risk_history(limit: int = 30):
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        query = f"""
+        query = """
         SELECT
             created_at,
             risk_score,
@@ -277,10 +365,10 @@ def get_seizure_risk_history(limit: int = 30):
             model_version
         FROM seizure_predictions
         ORDER BY created_at DESC
-        LIMIT {limit};
+        LIMIT %s;
         """
 
-        cursor.execute(query)
+        cursor.execute(query, (limit,))
 
         rows = cursor.fetchall()
 

@@ -4,6 +4,7 @@ import "./App.css";
 import MyHealth from "./pages/MyHealth";
 import RiskAlerts from "./pages/RiskAlerts";
 import SeizureRisk from "./pages/SeizureRisk";
+import History from "./pages/History";
 
 const API_URL = "http://127.0.0.1:8000/sensor-data/latest";
 
@@ -21,9 +22,9 @@ const navigationItems = [
     icon: "✦",
   },
   {
-  name: "Seizure Risk",
-  icon: "⌬",
-},
+    name: "Seizure Risk",
+    icon: "⌬",
+  },
   {
     name: "History",
     icon: "◷",
@@ -42,7 +43,9 @@ const navigationItems = [
   },
 ];
 
+
 function App() {
+
   const [activePage, setActivePage] = useState("Dashboard");
 
   const [data, setData] = useState(null);
@@ -51,12 +54,15 @@ function App() {
 
   const [lastUpdated, setLastUpdated] = useState(null);
 
+
   // ============================================================
   // FETCH LIVE SENSOR DATA
   // ============================================================
 
   const fetchSensorData = async () => {
+
     try {
+
       const response = await fetch(
         `${API_URL}?t=${Date.now()}`,
         {
@@ -71,62 +77,102 @@ function App() {
       const result = await response.json();
 
       if (result.data) {
+
         setData(result.data);
+
         setConnected(true);
+
         setLastUpdated(new Date());
+
       }
+
     } catch (error) {
+
       console.error("Sensor API error:", error);
+
       setConnected(false);
+
     }
+
   };
+
 
   // ============================================================
   // LIVE POLLING
   // ============================================================
 
   useEffect(() => {
+
     let stopped = false;
+
     let timer;
 
+
     const poll = async () => {
+
       if (stopped) return;
 
       await fetchSensorData();
 
       if (!stopped) {
-        timer = setTimeout(poll, 100);
+
+        timer = setTimeout(
+          poll,
+          100
+        );
+
       }
+
     };
+
 
     poll();
 
+
     return () => {
+
       stopped = true;
+
       clearTimeout(timer);
+
     };
+
   }, []);
+
 
   // ============================================================
   // FORMAT VALUES
   // ============================================================
 
-  const value = (number, decimals = 1) => {
+  const value = (
+    number,
+    decimals = 1
+  ) => {
+
     if (
       number === null ||
       number === undefined
     ) {
+
       return "--";
+
     }
+
 
     const numericValue = Number(number);
 
+
     if (Number.isNaN(numericValue)) {
+
       return "--";
+
     }
 
+
     return numericValue.toFixed(decimals);
+
   };
+
 
   // ============================================================
   // CURRENT SENSOR VALUES
@@ -135,85 +181,123 @@ function App() {
   const fingerDetected =
     data?.finger_detected === true;
 
+
   const heartRate =
     data?.heart_rate;
+
 
   const spo2 =
     data?.spo2;
 
+
   const temperature =
     data?.temperature;
+
 
   // ============================================================
   // HEART RATE STATUS
   // ============================================================
 
   const getHeartStatus = () => {
+
     if (
       !fingerDetected ||
       heartRate === null ||
       heartRate === undefined
     ) {
+
       return "Waiting for reading";
+
     }
 
-    const hr = Number(heartRate);
+
+    const hr = Number(
+      heartRate
+    );
+
 
     if (Number.isNaN(hr)) {
+
       return "Waiting for reading";
+
     }
+
 
     if (
       hr < 50 ||
       hr > 120
     ) {
+
       return "Outside usual range";
+
     }
 
+
     return "Within usual range";
+
   };
+
 
   // ============================================================
   // SPO2 STATUS
   // ============================================================
 
   const getSpo2Status = () => {
+
     if (
       !fingerDetected ||
       spo2 === null ||
       spo2 === undefined
     ) {
+
       return "Waiting for reading";
+
     }
+
 
     const oxygen =
       Number(spo2);
 
+
     if (Number.isNaN(oxygen)) {
+
       return "Waiting for reading";
+
     }
+
 
     if (oxygen < 94) {
+
       return "Needs attention";
+
     }
 
+
     return "Normal";
+
   };
+
 
   // ============================================================
   // ROOM TEMPERATURE STATUS
   // ============================================================
 
   const getTemperatureStatus = () => {
+
     if (
       temperature === null ||
       temperature === undefined
     ) {
+
       return "Waiting for reading";
+
     }
 
+
     return "Room temperature";
+
   };
+
 
   // ============================================================
   // OVERALL STATUS
@@ -224,18 +308,25 @@ function App() {
       ? "Monitoring is active"
       : "Connection needs attention";
 
+
   const overallDescription =
     connected
       ? "Your health data is being monitored continuously."
       : "We are waiting to reconnect to the monitoring device.";
 
+
   // ============================================================
   // NAVIGATION
   // ============================================================
 
-  const handleNavigation = (page) => {
+  const handleNavigation = (
+    page
+  ) => {
+
     setActivePage(page);
+
   };
+
 
   // ============================================================
   // COMING SOON PAGE
@@ -246,7 +337,9 @@ function App() {
     description,
     icon,
   }) => {
+
     return (
+
       <div className="page-container">
 
         <div className="page-header">
@@ -268,6 +361,7 @@ function App() {
           </div>
 
         </div>
+
 
         <div className="panel">
 
@@ -291,12 +385,16 @@ function App() {
                 background: "#eef4ff",
               }}
             >
+
               {icon}
+
             </div>
+
 
             <h2>
               {title}
             </h2>
+
 
             <p
               style={{
@@ -306,8 +404,10 @@ function App() {
                 color: "#718096",
               }}
             >
+
               This section is being prepared
               for the VitalCare monitoring system.
+
             </p>
 
           </div>
@@ -315,15 +415,20 @@ function App() {
         </div>
 
       </div>
+
     );
+
   };
+
 
   // ============================================================
   // DASHBOARD
   // ============================================================
 
   const Dashboard = () => {
+
     return (
+
       <>
 
         {/* ======================================================
@@ -347,6 +452,7 @@ function App() {
             </p>
 
           </div>
+
 
           <div
             className={`device-status ${
@@ -378,6 +484,7 @@ function App() {
 
         </section>
 
+
         {/* ======================================================
             OVERALL HEALTH STATUS
         ====================================================== */}
@@ -391,8 +498,13 @@ function App() {
         >
 
           <div className="health-status-icon">
-            {connected ? "✓" : "!"}
+
+            {connected
+              ? "✓"
+              : "!"}
+
           </div>
+
 
           <div className="health-banner-content">
 
@@ -410,6 +522,7 @@ function App() {
 
           </div>
 
+
           <div className="last-checked">
 
             <span>
@@ -425,6 +538,7 @@ function App() {
           </div>
 
         </section>
+
 
         {/* ======================================================
             VITALS
@@ -446,6 +560,7 @@ function App() {
 
             </div>
 
+
             <div className="live-indicator">
 
               <span></span>
@@ -455,6 +570,7 @@ function App() {
             </div>
 
           </div>
+
 
           <div className="vitals-grid">
 
@@ -468,6 +584,7 @@ function App() {
                 ♥
               </div>
 
+
               <div className="vital-heading">
 
                 <span>
@@ -479,6 +596,7 @@ function App() {
                 </small>
 
               </div>
+
 
               <div className="vital-value">
 
@@ -492,6 +610,7 @@ function App() {
                 </span>
 
               </div>
+
 
               <div
                 className={`vital-status ${
@@ -511,6 +630,7 @@ function App() {
 
             </article>
 
+
             {/* ==================================================
                 SPO2
             ================================================== */}
@@ -520,6 +640,7 @@ function App() {
               <div className="vital-icon oxygen">
                 O₂
               </div>
+
 
               <div className="vital-heading">
 
@@ -533,6 +654,7 @@ function App() {
 
               </div>
 
+
               <div className="vital-value">
 
                 {value(
@@ -545,6 +667,7 @@ function App() {
                 </span>
 
               </div>
+
 
               <div
                 className={`vital-status ${
@@ -564,6 +687,7 @@ function App() {
 
             </article>
 
+
             {/* ==================================================
                 ROOM TEMPERATURE
             ================================================== */}
@@ -573,6 +697,7 @@ function App() {
               <div className="vital-icon temperature">
                 °
               </div>
+
 
               <div className="vital-heading">
 
@@ -585,6 +710,7 @@ function App() {
                 </small>
 
               </div>
+
 
               <div className="vital-value">
 
@@ -599,6 +725,7 @@ function App() {
 
               </div>
 
+
               <div className="vital-status status-normal">
 
                 <span></span>
@@ -609,6 +736,7 @@ function App() {
 
             </article>
 
+
             {/* ==================================================
                 SEIZURE RISK
             ================================================== */}
@@ -618,6 +746,7 @@ function App() {
               <div className="vital-icon risk">
                 ✦
               </div>
+
 
               <div className="vital-heading">
 
@@ -631,9 +760,11 @@ function App() {
 
               </div>
 
+
               <div className="risk-value">
                 LOW
               </div>
+
 
               <div className="vital-status status-normal">
 
@@ -648,6 +779,7 @@ function App() {
           </div>
 
         </section>
+
 
         {/* ======================================================
             LOWER DASHBOARD
@@ -675,6 +807,7 @@ function App() {
 
               </div>
 
+
               <div className="trend-current">
 
                 <strong>
@@ -692,6 +825,7 @@ function App() {
 
             </div>
 
+
             <div className="chart-placeholder">
 
               <div className="chart-grid-lines">
@@ -702,6 +836,7 @@ function App() {
                 <span></span>
 
               </div>
+
 
               <svg
                 className="trend-svg"
@@ -729,6 +864,7 @@ function App() {
 
               </svg>
 
+
               <div className="chart-labels">
 
                 <span>
@@ -748,6 +884,7 @@ function App() {
             </div>
 
           </article>
+
 
           {/* ====================================================
               SEIZURE RISK
@@ -769,11 +906,13 @@ function App() {
 
               </div>
 
+
               <span className="normal-pill">
                 LOW RISK
               </span>
 
             </div>
+
 
             <div className="risk-content">
 
@@ -793,6 +932,7 @@ function App() {
 
               </div>
 
+
               <div className="risk-message">
 
                 <h3>
@@ -804,6 +944,7 @@ function App() {
                   continuously analysing your
                   sensor data.
                 </p>
+
 
                 <button
                   className="text-button"
@@ -830,6 +971,7 @@ function App() {
 
         </section>
 
+
         {/* ======================================================
             RECENT ACTIVITY
         ====================================================== */}
@@ -852,11 +994,13 @@ function App() {
 
           </div>
 
+
           <div className="activity-card">
 
             <div className="activity-icon">
               ✓
             </div>
+
 
             <div className="activity-content">
 
@@ -872,6 +1016,7 @@ function App() {
 
             </div>
 
+
             <span className="activity-time">
               Just now
             </span>
@@ -879,6 +1024,7 @@ function App() {
           </div>
 
         </section>
+
 
         {/* ======================================================
             MONITORING FOOTER STATUS
@@ -908,7 +1054,9 @@ function App() {
 
           </div>
 
+
           <div className="monitoring-divider"></div>
+
 
           <div className="monitoring-item">
 
@@ -932,7 +1080,9 @@ function App() {
 
           </div>
 
+
           <div className="monitoring-divider"></div>
+
 
           <div className="monitoring-item">
 
@@ -959,8 +1109,11 @@ function App() {
         </section>
 
       </>
+
     );
+
   };
+
 
   // ============================================================
   // MAIN CONTENT
@@ -975,7 +1128,9 @@ function App() {
       return (
         <Dashboard />
       );
+
     }
+
 
     if (
       activePage === "My Health"
@@ -984,7 +1139,9 @@ function App() {
       return (
         <MyHealth />
       );
+
     }
+
 
     if (
       activePage === "Risk & Alerts"
@@ -993,7 +1150,9 @@ function App() {
       return (
         <RiskAlerts />
       );
+
     }
+
 
     if (
       activePage === "Seizure Risk"
@@ -1002,20 +1161,28 @@ function App() {
       return (
         <SeizureRisk />
       );
+
     }
+
+
+    // ==========================================================
+    // HISTORY
+    // ==========================================================
 
     if (
       activePage === "History"
     ) {
 
       return (
-        <ComingSoonPage
-          title="History"
-          description="Review your previous health monitoring sessions."
-          icon="◷"
-        />
+        <History />
       );
+
     }
+
+
+    // ==========================================================
+    // REPORTS
+    // ==========================================================
 
     if (
       activePage === "Reports"
@@ -1028,7 +1195,13 @@ function App() {
           icon="▤"
         />
       );
+
     }
+
+
+    // ==========================================================
+    // PROFILE
+    // ==========================================================
 
     if (
       activePage === "Profile"
@@ -1041,7 +1214,13 @@ function App() {
           icon="●"
         />
       );
+
     }
+
+
+    // ==========================================================
+    // SETTINGS
+    // ==========================================================
 
     if (
       activePage === "Settings"
@@ -1054,12 +1233,16 @@ function App() {
           icon="⚙"
         />
       );
+
     }
+
 
     return (
       <Dashboard />
     );
+
   };
+
 
   // ============================================================
   // APPLICATION
@@ -1069,11 +1252,13 @@ function App() {
 
     <div className="app">
 
+
       {/* ======================================================
           SIDEBAR
       ====================================================== */}
 
       <aside className="sidebar">
+
 
         {/* ====================================================
             BRAND
@@ -1099,6 +1284,7 @@ function App() {
 
         </div>
 
+
         {/* ====================================================
             MAIN MENU
         ==================================================== */}
@@ -1108,6 +1294,7 @@ function App() {
           <p className="sidebar-section-title">
             MAIN MENU
           </p>
+
 
           <nav className="sidebar-nav">
 
@@ -1145,6 +1332,7 @@ function App() {
 
         </div>
 
+
         {/* ====================================================
             ACCOUNT
         ==================================================== */}
@@ -1154,6 +1342,7 @@ function App() {
           <p className="sidebar-section-title">
             ACCOUNT
           </p>
+
 
           <nav className="sidebar-nav">
 
@@ -1191,6 +1380,7 @@ function App() {
 
         </div>
 
+
         {/* ====================================================
             DEVICE STATUS
         ==================================================== */}
@@ -1201,6 +1391,7 @@ function App() {
             MONITORING DEVICE
           </p>
 
+
           <div className="sidebar-device-status">
 
             <span
@@ -1210,6 +1401,7 @@ function App() {
                   : "offline"
               }`}
             ></span>
+
 
             <div>
 
@@ -1233,11 +1425,13 @@ function App() {
 
       </aside>
 
+
       {/* ======================================================
           MAIN AREA
       ====================================================== */}
 
       <div className="main-area">
+
 
         {/* ====================================================
             TOPBAR
@@ -1246,6 +1440,7 @@ function App() {
         <header className="topbar">
 
           <div className="topbar-spacer"></div>
+
 
           <div className="header-actions">
 
@@ -1264,6 +1459,7 @@ function App() {
               </span>
 
             </button>
+
 
             <button
               className="profile-button"
@@ -1292,6 +1488,7 @@ function App() {
 
         </header>
 
+
         {/* ====================================================
             PAGE CONTENT
         ==================================================== */}
@@ -1301,6 +1498,7 @@ function App() {
           {renderPage()}
 
         </main>
+
 
         {/* ====================================================
             FOOTER
@@ -1321,7 +1519,10 @@ function App() {
       </div>
 
     </div>
+
   );
+
 }
+
 
 export default App;
